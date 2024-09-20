@@ -31,7 +31,7 @@ module.exports = {
       //* verify token
       const token = jwt.verify(requestToken, publicKey, {
         issuer: ISSUER,
-        algorithms: ["RS256"],
+        algorithm: "RS256",
       });
       return Promise.resolve(token);
     } catch (error) {
@@ -41,8 +41,8 @@ module.exports = {
   verifyAccessToken: function (req) {
     try {
       //* read public key
-      const publicKey = fs.readFileSync(
-        path.join(__dirname, "../ssh/jwtRS256.key.pub"),
+      const privateKey = fs.readFileSync(
+        path.join(__dirname, "../ssh/jwtRS256.key"),
         "utf8"
       );
 
@@ -53,7 +53,7 @@ module.exports = {
       }
       const requestToken = auth.split(/\s+/).pop();
       //* verify token
-      const token = jwt.verify(requestToken, publicKey, {
+      const token = jwt.verify(requestToken, privateKey, {
         issuer: ISSUER,
         algorithms: ["RS256"],
       });
@@ -64,7 +64,7 @@ module.exports = {
 
       //* validate user
       return db
-        .findOne(global.dbCollection.ACCESSTOKEN, { _id: token.tokenId })
+        .findOne(global.dbCollection.USERS, { id: token.id })
         .then((d) => {
           if (!d) {
             return Promise.reject(401);

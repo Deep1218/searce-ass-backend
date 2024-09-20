@@ -42,7 +42,7 @@ auth.signIn = function (req, res) {
 
       //create token
       let tokenInfo = {
-        id: user._id,
+        id: user.id,
         email: user.email,
       };
       let token = jwt.get(tokenInfo);
