@@ -2,6 +2,8 @@
  * Please use below convensions to set error
  * 1001 - 1499 generic error
  * 1500 - 2000 user
+ * 2001 - 2500 project
+ * 2501 - 3000 position
  */
 const message = {
   200: {
@@ -59,6 +61,10 @@ const message = {
   1507: {
     message: "Invalid user",
     httpCode: 400,
+  },
+  2001: {
+    httpCode: 400,
+    message: "Not projects found",
   },
 };
 

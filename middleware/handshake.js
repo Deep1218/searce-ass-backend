@@ -4,7 +4,8 @@ const verify = (socket, next) => {
   const headers = socket.handshake.headers;
   Promise.resolve()
     .then(() => {
-      return jwt.verify(headers["authorization"]);
+      const token = headers["authorization"].split(/\s+/).pop();
+      return jwt.verify(token);
     })
     .then((user) => {
       const { id, email } = user;

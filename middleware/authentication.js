@@ -15,7 +15,8 @@ module.exports = function (app) {
         return Promise.reject(false);
       })
       .then((d) => {
-        req.user = d;
+        const { id, email } = d;
+        req.user = { id, email };
         next();
       })
       .catch((err) => {

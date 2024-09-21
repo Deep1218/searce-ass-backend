@@ -41,8 +41,8 @@ module.exports = {
   verifyAccessToken: function (req) {
     try {
       //* read public key
-      const privateKey = fs.readFileSync(
-        path.join(__dirname, "../ssh/jwtRS256.key"),
+      const publicKey = fs.readFileSync(
+        path.join(__dirname, "../ssh/jwtRS256.key.pub"),
         "utf8"
       );
 
@@ -53,31 +53,22 @@ module.exports = {
       }
       const requestToken = auth.split(/\s+/).pop();
       //* verify token
-      const token = jwt.verify(requestToken, privateKey, {
+      const token = jwt.verify(requestToken, publicKey, {
         issuer: ISSUER,
         algorithms: ["RS256"],
       });
 
-      if (!token || !token.tokenId) {
+      if (!token || !token.id) {
         return Promise.reject(401);
       }
 
       //* validate user
-      return db
-        .findOne(global.dbCollection.USERS, { id: token.id })
-        .then((d) => {
-          if (!d) {
-            return Promise.reject(401);
-          }
-
-          // check token is live
-          let ttl = moment.utc(moment.utc(d.created) + d.ttl);
-          let created = moment.utc(d.created);
-          if (!moment.utc().isBetween(created, ttl)) {
-            return Promise.reject(401);
-          }
-          return Promise.resolve(token);
-        });
+      return db.Users.findByPk(token.id).then((d) => {
+        if (!d) {
+          return Promise.reject(401);
+        }
+        return Promise.resolve(token);
+      });
     } catch (error) {
       return Promise.reject(error);
     }
