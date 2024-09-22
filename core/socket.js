@@ -7,6 +7,7 @@ module.exports = function (server) {
 
   io.on("connection", (socket) => {
     require("../sockets/projects")(socket);
+    require("../sockets/positions")(socket);
 
     socket.on("disconnect", () => {
       console.log("disconnected from user", socket.user);

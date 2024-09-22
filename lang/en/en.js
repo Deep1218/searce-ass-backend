@@ -59,12 +59,12 @@ const message = {
     httpCode: 400,
   },
   1507: {
-    message: "Invalid user",
+    message: "invalid user",
     httpCode: 400,
   },
   2001: {
     httpCode: 400,
-    message: "Not projects found",
+    message: "project not found",
   },
 };
 
