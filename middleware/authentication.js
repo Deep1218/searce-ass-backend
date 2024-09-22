@@ -4,7 +4,7 @@ const jwt = require("../core/jwt");
 module.exports = function (app) {
   let auth = function (req, res, next) {
     let prefix = "/api";
-    let noAuthURL = ["/", prefix + "/auth/login", prefix + "/users/"];
+    let noAuthURL = ["/", prefix + "/auth/login", prefix + "/users/create"];
 
     Promise.resolve()
       .then(() => {

@@ -3,6 +3,7 @@ const express = require("express");
 const helper = require("../core/helper");
 const db = require("../lib/database/");
 const global = require("../config/global");
+const { Op } = require("sequelize");
 
 const userRouter = express.Router();
 const user = {};
@@ -75,8 +76,29 @@ user.delete = function (req, res) {
     });
 };
 
+user.getAll = function (req, res) {
+  const { user } = req;
+  Promise.resolve()
+    .then(() => {
+      return db.Users.findAll({
+        where: {
+          id: {
+            [Op.not]: user.id,
+          },
+        },
+      });
+    })
+    .then((users) => {
+      helper.success(res, users, 200);
+    })
+    .catch((e) => {
+      helper.error(res, e);
+    });
+};
+
 module.exports = function (uri, app) {
-  userRouter.post("/", user.create);
+  userRouter.get("/", user.getAll);
+  userRouter.post("/create/", user.create);
   userRouter.delete("/:id", user.delete);
   app.use(uri, userRouter);
 };
