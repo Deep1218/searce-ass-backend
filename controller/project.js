@@ -65,8 +65,8 @@ project.get = function (req, res) {
   const { user, params } = req;
   /* ------------Param Error-------------- */
   let promise = helper.paramValidate({
-    code: 1500,
-    val: !params.id || !+params.id === Number,
+    code: 2002,
+    val: isNaN(params.id),
   });
   /* ------------------------------------- */
 

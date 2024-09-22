@@ -39,7 +39,7 @@ const message = {
     httpCode: 400,
   },
   1501: {
-    message: "Invalid email",
+    message: "invalid email",
     httpCode: 400,
   },
   1502: {
@@ -47,7 +47,7 @@ const message = {
     httpCode: 400,
   },
   1504: {
-    message: "Invalid email or password",
+    message: "invalid email or password",
     httpCode: 400,
   },
   1505: {
@@ -65,6 +65,10 @@ const message = {
   2001: {
     httpCode: 400,
     message: "project not found",
+  },
+  2002: {
+    httpCode: 400,
+    message: "invalid project id",
   },
 };
 
