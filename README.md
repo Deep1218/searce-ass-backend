@@ -7,7 +7,7 @@ Follow these steps to run the Node.js project:
 1. **Clone the repository**:
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Deep1218/searce-ass-backend.git
    ```
 
 2. **Install dependencies**:
