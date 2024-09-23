@@ -15,6 +15,9 @@ globalConfig.socketEvents = {
   PROJECT_CREATED: "project:created",
   UPDATE_PROJECT: "project:update",
   PROJECT_UPDATED: "project:updated",
+  // calculation
+  GENERATE_CALCULATION: "project:generateCalcu",
+  CALCULATION_GENERATED: "project:generatedCalcu",
   // positions
   CREATE_POSITION: "position:create",
   POSITION_CREATED: "position:created",

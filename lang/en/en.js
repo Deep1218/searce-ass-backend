@@ -70,6 +70,14 @@ const message = {
     httpCode: 400,
     message: "invalid project id",
   },
+  2501: {
+    httpCode: 200,
+    message: "position delete successfully",
+  },
+  2502: {
+    httpCode: 400,
+    message: "position not found",
+  },
 };
 
 module.exports = message;

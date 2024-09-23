@@ -9,7 +9,7 @@ const project = {};
 
 project.getAll = function (req, res) {
   const { user } = req;
-
+  let projectsMap = new Map();
   const query = `SELECT 
                     p.*,
                     pp.id as planner_id,
@@ -25,25 +25,23 @@ project.getAll = function (req, res) {
                     p."userId" = :userId
                 OR 
                     u_planner.id = :userId
-                ORDER BY p.id;`;
+                ORDER BY p.id DESC;`;
 
   Promise.resolve()
     .then(() => {
       return db.sequelize.query(query, {
         replacements: {
-          table1: dbCollection.PROJECTS,
-          table2: dbCollection.PROJECT_PLANNERS,
-          table3: dbCollection.USERS,
           userId: user.id,
         },
       });
     })
     .then(([projects, _]) => {
-      let projectsMap = new Map();
+      let projectIds = [];
       projects.forEach((project) => {
         const { planner_id, planner_user_id, planner_name, ...projectData } =
           project;
         if (!projectsMap.has(projectData.id)) {
+          projectIds.push(projectData.id);
           projectsMap.set(projectData.id, { ...projectData, planners: [] });
         }
         const currentProject = projectsMap.get(projectData.id);
@@ -53,7 +51,18 @@ project.getAll = function (req, res) {
           planner_name,
         });
       });
-      const result = Array.from(projectsMap, ([_, value]) => value);
+      let query = `SELECT COUNT(ps.id) as total_position, ps."projectId" FROM ${
+        dbCollection.POSITIONS
+      } ps WHERE ps."projectId" in (${projectIds.join(
+        ","
+      )}) GROUP BY ps."projectId"`;
+      return db.sequelize.query(query);
+    })
+    .then(([postions, _]) => {
+      const result = Array.from(projectsMap, ([key, value]) => {
+        const positionData = postions.find((pos) => pos.projectId == key);
+        return { ...value, totalPosition: positionData?.total_position || 0 };
+      });
       helper.success(res, result, 200);
     })
     .catch((e) => {
@@ -70,6 +79,7 @@ project.get = function (req, res) {
   });
   /* ------------------------------------- */
 
+  let projectsMap = new Map();
   const query = `SELECT p.*,
                 pp.id as planner_id,
                 u_planner.id as planner_user_id,
@@ -89,7 +99,7 @@ project.get = function (req, res) {
       });
     })
     .then(([projects, _]) => {
-      let projectsMap = new Map();
+      let projectIds = [];
       projects.forEach((project) => {
         const {
           planner_id,
@@ -98,6 +108,7 @@ project.get = function (req, res) {
           ...projectData
         } = project;
         if (!projectsMap.has(projectData.id)) {
+          projectIds.push(projectData.id);
           projectsMap.set(projectData.id, { ...projectData, planners: [] });
         }
         const currentProject = projectsMap.get(projectData.id);
@@ -107,8 +118,19 @@ project.get = function (req, res) {
           planner_user_name,
         });
       });
-      const result = Array.from(projectsMap, ([_, value]) => value);
-      helper.success(res, result, 200);
+      let query = `SELECT COUNT(ps.id) as total_position, ps."projectId" FROM ${
+        dbCollection.POSITIONS
+      } ps WHERE ps."projectId" in (${projectIds.join(
+        ","
+      )}) GROUP BY ps."projectId"`;
+      return db.sequelize.query(query);
+    })
+    .then(([postions, _]) => {
+      const result = Array.from(projectsMap, ([key, value]) => {
+        const positionData = postions.find((pos) => pos.projectId == key);
+        return { ...value, totalPosition: positionData?.total_position || 0 };
+      });
+      helper.success(res, result[0], 200);
     })
     .catch((e) => {
       helper.error(res, e);

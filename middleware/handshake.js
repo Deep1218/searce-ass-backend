@@ -1,7 +1,8 @@
 const jwt = require("../core/jwt");
 
 const verify = (socket, next) => {
-  const headers = socket.handshake.auth || socket.handshake.headers;
+  let headers = socket.handshake.auth;
+  if (!Object.keys(headers).length) headers = socket.handshake.headers;
   Promise.resolve()
     .then(() => {
       const token = headers["authorization"].split(/\s+/).pop();

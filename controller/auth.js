@@ -49,6 +49,7 @@ auth.signIn = function (req, res) {
       let u = {
         userId: user.id,
         email: user.email,
+        name: user.name,
         token,
       };
       return Promise.resolve(u);

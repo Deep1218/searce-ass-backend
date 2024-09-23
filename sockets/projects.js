@@ -27,7 +27,7 @@ projects.create = (socket, data) => {
       socket.emit(socketEvents.PROJECT_CREATED, {
         success: true,
         data: result,
-        message: "success",
+        message: "Project created successfully",
         error: false,
       });
     })
@@ -82,11 +82,112 @@ projects.update = (socket, data) => {
     });
 };
 
+projects.graphData = (socket, data) => {
+  const { user } = socket;
+  const query = `SELECT p.id FROM ${dbCollection.PROJECTS} p
+  LEFT JOIN ${dbCollection.PROJECT_PLANNERS} as pp ON pp."projectId" = p.id
+  WHERE (p."userId" = :userId or pp."userId" = :userId) AND p.id = :projectId
+  LIMIT 1;`;
+
+  Promise.resolve()
+    .then(() => {
+      return db.sequelize.query(query, {
+        replacements: {
+          userId: user.id,
+          projectId: data.projectId,
+        },
+      });
+    })
+    .then(([project, _]) => {
+      if (!project.length) {
+        socket.emit(socketEvents.CALCULATION_GENERATED, {
+          success: false,
+          error: true,
+          message: "Project not found",
+        });
+        return Promise.reject("Project not found");
+      }
+      const budgetCalculationQuery = `SELECT
+                                  COALESCE(SUM(ps.budget), 0) as total_used,
+                                  COUNT(ps.id) as total_positions,
+                                  p."totalBudget",
+                                  GREATEST(COALESCE(p."totalBudget" - SUM(ps.budget), 0), 0) AS remaining
+                                FROM ${dbCollection.POSITIONS} as ps
+                                LEFT JOIN ${dbCollection.PROJECTS} as p on p.id = ps."projectId"
+                                WHERE ps."projectId" = :projectId
+                                GROUP BY p.id;`;
+      const departmentCalculationQuery = `SELECT 
+                                            COALESCE(SUM(ps.budget), 0) as total_department_usage,
+                                            ps.department,
+                                            GREATEST(COALESCE((SUM(ps.budget) / NULLIF(p."totalBudget", 0)) * 100, 0), 0) AS percent_used
+                                          FROM positions as ps
+                                          LEFT JOIN projects as p on p.id = ps."projectId"
+                                          WHERE ps."projectId" = :projectId and ps.department = :department
+                                          GROUP BY ps.department, p."totalBudget";`;
+      return Promise.all([
+        db.sequelize.query(budgetCalculationQuery, {
+          replacements: {
+            projectId: data.projectId,
+          },
+        }),
+        db.sequelize.query(departmentCalculationQuery, {
+          replacements: {
+            projectId: data.projectId,
+            department: "engineering",
+          },
+        }),
+        db.sequelize.query(departmentCalculationQuery, {
+          replacements: {
+            projectId: data.projectId,
+            department: "product",
+          },
+        }),
+        db.sequelize.query(departmentCalculationQuery, {
+          replacements: {
+            projectId: data.projectId,
+            department: "sales",
+          },
+        }),
+        db.sequelize.query(departmentCalculationQuery, {
+          replacements: {
+            projectId: data.projectId,
+            department: "others",
+          },
+        }),
+      ]);
+    })
+    .then(
+      ([
+        [result, metadata],
+        [result1, metadata1],
+        [result2, metadata2],
+        [result3, metadata3],
+        [result4, metadata4],
+      ]) => {
+        socket.emit(socketEvents.CALCULATION_GENERATED, {
+          success: true,
+          data: [...result, ...result1, ...result2, ...result3, ...result4],
+          error: false,
+          message: "success",
+        });
+      }
+    )
+    .catch((err) => {
+      socket.emit(socketEvents.CALCULATION_GENERATED, {
+        success: false,
+        error: true,
+        message: "internal server error",
+      });
+    });
+};
 module.exports = (socket) => {
   socket.on(socketEvents.CREATE_PROJECT, (data) =>
     projects.create(socket, data)
   );
   socket.on(socketEvents.UPDATE_PROJECT, (data) =>
     projects.update(socket, data)
+  );
+  socket.on(socketEvents.GENERATE_CALCULATION, (data) =>
+    projects.graphData(socket, data)
   );
 };

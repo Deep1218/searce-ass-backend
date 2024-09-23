@@ -95,18 +95,12 @@ let SendListResponse = function (
   }
   var params = req?.query;
   var page = Number(params.page) || 0,
-    page_size = Number(params.size) || 25,
+    page_size = Number(params.limit) || 10,
     begin = page * page_size;
-  // var end = Math.min((page_size * (page + 1)), records);
-  // var lastPage = Math.max(Math.ceil(records / page_size), 1);
-
   let pagination = {
     length: total_record,
-    size: page_size,
+    limit: page_size,
     page: page,
-    sort: params.sort,
-    order: params.order,
-    search: params.search,
   };
 
   if (code > 0) {
