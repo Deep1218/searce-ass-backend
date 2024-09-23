@@ -50,8 +50,3 @@ Follow these steps to run the Node.js project:
    ```
 
 6. Once the server is running, access the API at `http://localhost:<port>`, where `<port>` is the value specified in your `.env` file.
-
-```
-
-This version clearly states that PostgreSQL is being used as the database. Let me know if you need anything else!
-```
