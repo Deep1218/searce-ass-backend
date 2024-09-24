@@ -3,8 +3,6 @@ const db = require("../lib/database");
 const positions = {};
 
 positions.create = (socket, data) => {
-  const { user } = socket;
-
   Promise.resolve()
     .then(() => {
       const query = `SELECT p.id FROM ${dbCollection.PROJECTS} p
@@ -13,7 +11,7 @@ positions.create = (socket, data) => {
                 LIMIT 1;`;
       return db.sequelize.query(query, {
         replacements: {
-          userId: user.id,
+          userId: data.userId,
           projectId: data.projectId,
         },
       });
@@ -27,10 +25,11 @@ positions.create = (socket, data) => {
         });
         return Promise.reject("Project not found");
       }
+      const { userId, ...positionData } = data;
       return db.Positions.create({
-        ...data,
-        created_by: user.id,
-        updated_by: user.id,
+        ...positionData,
+        created_by: userId,
+        updated_by: userId,
       });
     })
     .then((position) => {
@@ -50,8 +49,6 @@ positions.create = (socket, data) => {
     });
 };
 
-module.exports = (socket) => {
-  socket.on(socketEvents.CREATE_POSITION, (data) =>
-    positions.create(socket, data)
-  );
+module.exports = (socket, io) => {
+  socket.on(socketEvents.CREATE_POSITION, (data) => positions.create(io, data));
 };

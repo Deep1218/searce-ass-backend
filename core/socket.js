@@ -6,8 +6,8 @@ module.exports = function (server) {
   require("../middleware/handshake")(io);
 
   io.on("connection", (socket) => {
-    require("../sockets/projects")(socket);
-    require("../sockets/positions")(socket);
+    require("../sockets/projects")(socket, io);
+    require("../sockets/positions")(socket, io);
 
     socket.on("disconnect", () => {
       console.log("disconnected from user", socket.user);

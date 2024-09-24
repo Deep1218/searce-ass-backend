@@ -59,7 +59,7 @@ projects.update = (socket, data) => {
         });
         return Promise.reject("Project not found");
       }
-      const { id, ...projectData } = data;
+      const { id, userId, ...projectData } = data;
       return db.Projects.update(
         { ...projectData },
         { where: { id: project[0].id } }
@@ -83,7 +83,6 @@ projects.update = (socket, data) => {
 };
 
 projects.graphData = (socket, data) => {
-  const { user } = socket;
   const query = `SELECT p.id FROM ${dbCollection.PROJECTS} p
   LEFT JOIN ${dbCollection.PROJECT_PLANNERS} as pp ON pp."projectId" = p.id
   WHERE (p."userId" = :userId or pp."userId" = :userId) AND p.id = :projectId
@@ -93,7 +92,7 @@ projects.graphData = (socket, data) => {
     .then(() => {
       return db.sequelize.query(query, {
         replacements: {
-          userId: user.id,
+          userId: data.userId,
           projectId: data.projectId,
         },
       });
@@ -166,7 +165,10 @@ projects.graphData = (socket, data) => {
       ]) => {
         socket.emit(socketEvents.CALCULATION_GENERATED, {
           success: true,
-          data: [...result, ...result1, ...result2, ...result3, ...result4],
+          data: {
+            projectId: data.projectId,
+            result: [...result, ...result1, ...result2, ...result3, ...result4],
+          },
           error: false,
           message: "success",
         });
@@ -180,14 +182,14 @@ projects.graphData = (socket, data) => {
       });
     });
 };
-module.exports = (socket) => {
-  socket.on(socketEvents.CREATE_PROJECT, (data) =>
-    projects.create(socket, data)
-  );
+module.exports = (socket, io) => {
+  socket.on(socketEvents.CREATE_PROJECT, (data) => {
+    projects.create(socket, data);
+  });
   socket.on(socketEvents.UPDATE_PROJECT, (data) =>
     projects.update(socket, data)
   );
   socket.on(socketEvents.GENERATE_CALCULATION, (data) =>
-    projects.graphData(socket, data)
+    projects.graphData(io, data)
   );
 };
